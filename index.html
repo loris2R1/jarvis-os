@@ -778,6 +778,29 @@ async function loadMeteo(){
 }
 loadMeteo(); setInterval(loadMeteo,600000);
 
+// ══════════════════════ CERVEAU IA — EDGE FUNCTION
+const JARVIS_BRAIN = 'https://nrubwqrcbhtaxhqmihud.supabase.co/functions/v1/dynamic-processor';
+let voiceHistory = []; // mémoire de la conversation en cours
+
+async function askJarvis(message) {
+  try {
+    const r = await fetch(JARVIS_BRAIN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, history: voiceHistory, user_id: USER_ID })
+    });
+    const d = await r.json();
+    const reply = d.reply || 'Je n\'ai pas pu traiter votre demande.';
+    // Mémoriser l'échange
+    voiceHistory.push({ role: 'user', content: message });
+    voiceHistory.push({ role: 'assistant', content: reply });
+    if (voiceHistory.length > 10) voiceHistory = voiceHistory.slice(-10);
+    return reply;
+  } catch(e) {
+    return 'Erreur de connexion au cerveau IA.';
+  }
+}
+
 // ══════════════════════ SUPABASE — CONNEXION RÉELLE
 const SUPA_URL = 'https://nrubwqrcbhtaxhqmihud.supabase.co';
 const SUPA_KEY = 'sb_publishable_MLQAsyAbCFkCq3a_XOQhlg_PE1Ljk9d';
@@ -913,27 +936,9 @@ function toggleMic(){
 
 async function handleVoice(text){
   bloom.strength = 1.6;
-  saveConversation('user', text, 'vocal');
-  const t=text.toLowerCase();
-  let reply='';
-  // Ajouter une tâche
-  if(t.includes('ajoute') || t.includes('créer tâche') || t.includes('nouvelle tâche')){
-    const titre = text.replace(/ajoute|créer tâche|nouvelle tâche/gi,'').trim();
-    const ok = await addTaskFromVoice(titre);
-    reply = ok ? `Tâche ajoutée : "${titre}". Elle est enregistrée dans votre base.` : 'Erreur lors de l\'ajout de la tâche.';
-    if(ok) loadTasks();
-  }
-  else if(t.includes('hier')||t.includes('accompli')){
-    localStorage.setItem('jarvis_hier',text);
-    saveBriefing(text);
-    reply='Noté. J\'enregistre vos accomplissements pour demain.';
-  }
-  else if(t.includes('météo')){reply='Météo Sydney en consultation.';}
-  else if(t.includes('réunion')||t.includes('agenda')){reply=buildBriefing();}
-  else if(t.includes('projet')||t.includes('statut')){reply='Six projets actifs. Australie 60%. The Crew 35%. Communication 10%. Global 32%.';}
-  else{reply='Compris, Loris. Autre chose ?';}
+  showVoiceOverlay('JARVIS réfléchit…', '');
+  const reply = await askJarvis(text);
   showVoiceOverlay('JARVIS', reply);
-  saveConversation('jarvis', reply, 'vocal');
   jarvisSpeak(reply, hideVoiceOverlay);
 }
 
