@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>JARVIS OS</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c:#00d4ff;--cd:rgba(0,212,255,0.15);--cb:rgba(0,212,255,0.3);
+  --cg:0 0 12px rgba(0,212,255,0.4);--bg:#020408;--panel:rgba(5,15,30,0.9);
+  --txt:#c8f0ff;--mt:rgba(0,212,255,0.45);--mono:'Share Tech Mono',monospace;
+  --hud:'Orbitron',sans-serif;--ok:#00ff88;--warn:#ffaa00;--err:#ff3355;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden;user-select:none}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.04) 1px,transparent 1px);background-size:50px 50px;animation:gridMove 20s linear infinite;z-index:0}
+body::after{content:'';position:fixed;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c),transparent);opacity:0.35;animation:scanLine 7s linear infinite;z-index:1}
+@keyframes gridMove{to{transform:translateY(50px)}}
+@keyframes scanLine{0%{top:-2px}100%{top:100vh}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes glow{0%,100%{box-shadow:var(--cg)}50%{box-shadow:0 0 24px rgba(0,212,255,0.6)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rot{to{transform:rotate(360deg)}}
+@keyframes rotR{to{transform:rotate(-360deg)}}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+.os{position:fixed;inset:0;display:grid;grid-template-rows:54px 1fr 42px;grid-template-columns:270px 1fr 255px;gap:8px;padding:8px;z-index:2}
+
+/* PANEL */
+.p{background:var(--panel);border:1px solid var(--cb);position:relative;backdrop-filter:blur(12px);animation:fadeIn 0.5s ease forwards}
+.p::before,.p::after,.p .c1,.p .c2{content:'';position:absolute;width:11px;height:11px;border-color:var(--c);border-style:solid}
+.p::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.p::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.p .c1{top:-1px;right:-1px;border-width:2px 2px 0 0}
+.p .c2{bottom:-1px;left:-1px;border-width:0 0 2px 2px}
+
+/* HEADER */
+.hdr{grid-column:1/-1;grid-row:1;display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+.hl{display:flex;align-items:center;gap:14px}
+.arc{width:34px;height:34px;position:relative;flex-shrink:0}
+.ao{position:absolute;inset:0;border:2px solid var(--c);border-radius:50%;animation:rot 4s linear infinite;border-top-color:transparent;border-right-color:transparent}
+.ai{position:absolute;inset:5px;border:1px solid var(--c);border-radius:50%;animation:rotR 3s linear infinite;border-bottom-color:transparent}
+.ak{position:absolute;inset:10px;background:var(--c);border-radius:50%;box-shadow:0 0 10px var(--c),0 0 20px var(--c);animation:pulse 2s ease-in-out infinite}
+.ht{font-family:var(--hud);font-size:19px;font-weight:700;color:var(--c);letter-spacing:.15em;text-shadow:var(--cg)}
+.hs{font-size:9px;color:var(--mt);letter-spacing:.2em;margin-top:2px}
+.hc{display:flex;align-items:center;gap:22px}
+.sv{font-family:var(--hud);font-size:13px;color:var(--c);text-align:center}
+.sl{font-size:9px;color:var(--mt);letter-spacing:.1em;margin-top:2px;text-align:center}
+.hr{display:flex;align-items:center;gap:14px}
+.son{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ok);letter-spacing:.1em}
+.sd{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pulse 1.5s infinite}
+#clk{font-family:var(--hud);font-size:15px;color:var(--c);letter-spacing:.1em}
+#dat{font-size:9px;color:var(--mt);letter-spacing:.12em;margin-top:2px;text-align:right}
+
+/* COLUMNS */
+.cl{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:8px}
+.cc{grid-column:2;grid-row:2;background:transparent;border:none;display:flex;flex-direction:column;gap:8px}
+.cr{grid-column:3;grid-row:2;display:flex;flex-direction:column;gap:8px}
+
+/* PANEL HEADER */
+.ph{font-family:var(--hud);font-size:9px;letter-spacing:.2em;color:var(--mt);padding:9px 13px 6px;border-bottom:1px solid var(--cb);display:flex;align-items:center;gap:7px}
+.ph i{font-size:13px;color:var(--c)}
+.pb{padding:11px 13px}
+
+/* MISSION */
+.mp{flex:0 0 auto}
+.mtag{font-size:9px;color:var(--c);letter-spacing:.2em;margin-bottom:5px}
+.mn{font-family:var(--hud);font-size:12px;color:#fff;margin-bottom:7px}
+.md{font-size:10px;color:var(--mt);line-height:1.7}
+.ms{margin-top:9px;display:flex;flex-direction:column;gap:3px}
+.st{font-size:10px;color:var(--mt);display:flex;align-items:center;gap:5px}
+.st::before{content:'//';font-size:9px}
+.st.ok{color:var(--ok)}.st.ac{color:var(--c)}
+
+/* AGENTS */
+.ap{flex:1;overflow:hidden}
+.al{padding:7px 13px;display:flex;flex-direction:column;gap:5px}
+.ar{display:flex;align-items:center;gap:9px;padding:8px 9px;border:1px solid rgba(0,212,255,0.1);cursor:pointer;transition:all .2s;position:relative;text-decoration:none;color:inherit}
+.ar::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--c);transform:scaleY(0);transition:transform .2s}
+.ar:hover{border-color:var(--cb);background:var(--cd)}.ar:hover::before{transform:scaleY(1)}
+.ai2{width:26px;height:26px;border:1px solid var(--cb);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ai2 i{font-size:13px;color:var(--c)}
+.an{flex:1;min-width:0}
+.an1{font-family:var(--hud);font-size:10px;color:#fff;letter-spacing:.08em}
+.an2{font-size:9px;color:var(--mt);margin-top:1px}
+.ado{width:5px;height:5px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+
+/* WEATHER */
+.wp{flex:0 0 auto}
+.wb{padding:10px 13px;display:flex;align-items:center;gap:12px}
+.wt{font-family:var(--hud);font-size:28px;color:var(--c);text-shadow:var(--cg)}
+.wd{flex:1}
+.wl{font-size:10px;color:#fff;margin-bottom:2px}
+.wm{font-size:9px;color:var(--mt)}
+#w-status{font-size:10px;color:var(--mt);font-style:italic}
+
+/* PROJECTS */
+.pp{flex:1}
+.pg{padding:9px 13px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.pc{border:1px solid rgba(0,212,255,0.15);padding:11px;cursor:pointer;transition:all .2s;position:relative;text-decoration:none;display:block;color:inherit}
+.pc::before,.pc::after{content:'';position:absolute;width:7px;height:7px;border-color:var(--c);border-style:solid}
+.pc::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+.pc::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+.pc:hover{border-color:var(--cb);background:var(--cd);box-shadow:var(--cg)}
+.pi{font-size:9px;color:var(--mt);letter-spacing:.12em;margin-bottom:3px;font-family:var(--mono)}
+.pn{font-family:var(--hud);font-size:10px;color:#fff;letter-spacing:.07em;margin-bottom:2px}
+.pd{font-size:9px;color:var(--mt);margin-bottom:7px}
+.pb2{height:2px;background:rgba(0,212,255,0.1)}
+.pf{height:100%;background:var(--c);box-shadow:0 0 6px var(--c);transition:width 1s ease}
+.pp2{font-size:9px;color:var(--mt);margin-top:3px;text-align:right}
+
+/* MEETINGS */
+.rp{flex:0 0 auto}
+.rl{padding:7px 13px;display:flex;flex-direction:column;gap:4px}
+.rr{display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid rgba(0,212,255,0.08);font-size:10px}
+.rd{font-family:var(--hud);font-size:9px;color:var(--c);min-width:68px;letter-spacing:.07em}
+.rt{color:var(--mt);min-width:33px}.rn{color:var(--txt)}
+
+/* METRICS */
+.mep{flex:0 0 auto}
+.meg{padding:9px 13px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.me{border:1px solid rgba(0,212,255,0.12);padding:9px}
+.mv{font-family:var(--hud);font-size:17px;color:var(--c);text-shadow:var(--cg)}
+.ml{font-size:9px;color:var(--mt);letter-spacing:.09em;margin-top:2px}
+
+/* ACTIONS */
+.acp{flex:1}
+.acl{padding:7px 13px;display:flex;flex-direction:column;gap:5px}
+.ab{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--cb);background:var(--cd);color:var(--c);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;text-decoration:none;letter-spacing:.04em}
+.ab:hover{background:rgba(0,212,255,0.25);box-shadow:var(--cg)}
+.ab.pr{border-color:var(--c);animation:glow 3s ease-in-out infinite}
+.ab i{font-size:15px}
+
+/* LOG */
+.lp{flex:0 0 auto}
+.lb{padding:7px 13px}
+.ll{font-size:9px;color:var(--mt);line-height:1.9}
+.ll span{color:var(--c)}
+.cur{display:inline-block;width:6px;height:9px;background:var(--c);animation:blink 1s infinite;vertical-align:-1px;margin-left:2px}
+
+/* FOOTER */
+.ft{grid-column:1/-1;grid-row:3;display:flex;align-items:center;justify-content:space-between;padding:0 14px}
+.fl{font-size:9px;color:var(--mt);letter-spacing:.12em}
+.fc{font-size:10px;color:rgba(0,212,255,0.25);font-style:italic;letter-spacing:.06em}
+.fr{display:flex;align-items:center;gap:14px}
+.sb{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--mt)}
+.bt{width:55px;height:3px;background:rgba(0,212,255,0.1)}
+.bf{height:100%;background:var(--c);transition:width 1s}
+
+/* CONNECTION STATUS */
+.ws-badge{font-size:9px;letter-spacing:.1em;padding:3px 8px;border:1px solid;border-radius:2px}
+.ws-ok{color:var(--ok);border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.08)}
+.ws-err{color:var(--warn);border-color:rgba(255,170,0,0.3);background:rgba(255,170,0,0.08)}
+</style>
+</head>
+<body>
+<canvas id="globe" style="position:fixed;inset:0;z-index:1"></canvas><div style="position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 25%,rgba(0,0,0,0.88) 100%);z-index:2;pointer-events:none"></div>
+<div class="os">
+
+  <!-- HEADER -->
+  <div class="p hdr"><div class="c1"></div><div class="c2"></div>
+    <div class="hl">
+      <div class="arc"><div class="ao"></div><div class="ai"></div><div class="ak"></div></div>
+      <div><div class="ht">JARVIS OS</div><div class="hs">SYSTÃˆME DE PILOTAGE Â· v0.1</div></div>
+    </div>
+    <div class="hc">
+      <div><div class="sv" id="h-projets">6</div><div class="sl">PROJETS</div></div>
+      <div><div class="sv">6</div><div class="sl">AGENTS</div></div>
+      <div><div class="sv">1</div><div class="sl">MISSION</div></div>
+      <div><div class="sv" id="h-uptime">00:00</div><div class="sl">UPTIME</div></div>
+    </div>
+    <div class="hr">
+      <span id="ws-badge" class="ws-badge ws-err">HORS LIGNE</span>
+      <div><div id="clk">--:--:--</div><div id="dat">--- -- ---</div></div>
+      <div class="son"><div class="sd"></div> SYSTÃˆME ACTIF</div>
+    </div>
+  </div>
+
+  <!-- LEFT -->
+  <div class="cl">
+    <div class="p mp"><div class="c1"></div><div class="c2"></div>
+      <div class="ph"><i class="ti ti-target"></i> MISSION ACTIVE</div>
+      <div class="pb">
+        <div class="mtag">// PRIORITÃ‰ ABSOLUE</div>
+        <div class="mn">PHOENIX</div>
+        <div class="md">Transformer deux annÃ©es d'idÃ©es en une architecture unique exÃ©cutable.</div>
+        <div class="ms">
+          <div class="st ok">Inventaire</div>
+          <div class="st ac">Tri &amp; Fusion</div>
+          <div class="st">Suppression doublons</div>
+          <div class="st">Master Plan final</div>
+        </div>
+      </div>
+    </div>
+    <div class="p wp"><div class="c1"></div><div class="c2"></div>
+      <div class="ph"><i class="ti ti-cloud"></i> MÃ‰TÃ‰O Â· <span id="w-ville">SYDNEY</span></div>
+      <div class="wb">
+        <div class="wt" id="w-temp">--Â°</div>
+        <div class="wd">
+          <div class="wl" id="w-desc">Chargement...</div>
+          <div class="wm" id="w-details"></div>
+          <div id="w-status" style="margin-top:4px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="p ap"><div class="c1"></div><div class="c2"></div>
+      <div class="ph"><i class="ti ti-cpu"></i> AGENTS ACTIFS</div>
+      <div class="al" id="agent-list"></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="cc">
+    <div class="p pp"><div class="c1"></div><div class="c2"></div>
+      <div class="ph"><i class="ti ti-layout-grid"></i> PROJETS</div>
+      <div class="pg" id="proj-grid"></div>
+    </div>
+    <div class="p rp"><div class="c1"></div><div class="c2"></div>
+      <div class="ph"><i class="ti ti-calendar"></i> RÃ‰UNIONS</div>
+      <div class="rl" id="reunion-list"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="cr">
+    <div class="p mep"><div class="c1"></div><div class="c2"></div>
+      <div class="ph"><i class="ti ti-chart-bar"></i> MÃ‰TRIQUES</div>
+      <div class="meg">
+        <div class="me"><div class="mv">2Y</div><div class="ml">EXPÃ‰RIENCE</div></div>
+        <div class="me"><div class="mv">âˆž</div><div class="ml">AMBITION</div></div>
+        <div class="me"><div class="mv" id="m-mem">--</div><div class="ml">RAM SERVEUR</div></div>
+        <div class="me"><div class="mv">AU</div><div class="ml">LOCALISATION</div></div>
+      </div>
+    </div>
+    <div class="p acp"><div class="c1"></div><div class="c2"></div>
+      <div class="ph"><i class="ti ti-terminal"></i> ACTIONS</div>
+      <div class="acl">
+        <a class="ab pr" href="https://claude.ai" target="_blank"><i class="ti ti-player-play"></i> LANCER SESSION</a>
+        <a class="ab" href="https://claude.ai" target="_blank"><i class="ti ti-chart-bar"></i> RAPPORT GÃ‰NÃ‰RAL</a>
+        <a class="ab" href="https://claude.ai" target="_blank"><i class="ti ti-plus"></i> NOUVELLE IDÃ‰E</a>
+        <a class="ab" href="https://claude.ai" target="_blank"><i class="ti ti-calendar"></i> PRÃ‰PARER RÃ‰UNION</a>
+        <a class="ab" href="https://claude.ai" target="_blank"><i class="ti ti-file-export"></i> MASTER PLAN</a>
+        <a class="ab" href="https://claude.ai" target="_blank"><i class="ti ti-rocket"></i> MISSION PHOENIX</a>
+      </div>
+    </div>
+    <div class="p lp"><div class="c1"></div><div class="c2"></div>
+      <div class="ph"><i class="ti ti-code"></i> SYSTEM LOG</div>
+      <div class="lb" id="log-body">
+        <div class="ll"><span>[SYS]</span> JARVIS OS v0.1 dÃ©marrÃ©</div>
+        <div class="ll"><span>[WS]</span>  Connexion serveur...<span class="cur"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="p ft"><div class="c1"></div><div class="c2"></div>
+    <div class="fl">JARVIS OS Â· LORIS DERRIEN Â· SYSTÃˆME DE PILOTAGE PERSONNEL</div>
+    <div class="fc">"Construire des systÃ¨mes qui rendent les rÃªves exÃ©cutables."</div>
+    <div class="fr">
+      <div class="sb">CPU <div class="bt"><div class="bf" id="cpu-b" style="width:30%"></div></div></div>
+      <div class="sb">MEM <div class="bt"><div class="bf" id="mem-b" style="width:50%"></div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PORT = 7777;
+let ws, startTs = Date.now(), uptime = 0;
+
+// â”€â”€ LOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function log(tag, msg, color) {
+  const box = document.getElementById('log-body');
+  const d = document.createElement('div');
+  d.className = 'll';
+  d.innerHTML = `<span style="color:${color||'var(--c)'}">[${tag}]</span> ${msg}`;
+  box.appendChild(d);
+  while (box.children.length > 6) box.removeChild(box.firstChild);
+}
+
+// â”€â”€ CLOCK (local fallback) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function pad(n){return String(n).padStart(2,'0')}
+const JOURS=['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
+const MOIS=['JAN','FÃ‰V','MAR','AVR','MAI','JUN','JUL','AOÃ›','SEP','OCT','NOV','DÃ‰C'];
+function tickLocal(){
+  const n=new Date();
+  document.getElementById('clk').textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+  document.getElementById('dat').textContent=JOURS[n.getDay()]+' '+pad(n.getDate())+' '+MOIS[n.getMonth()]+' '+n.getFullYear();
+  uptime=Math.floor((Date.now()-startTs)/1000);
+  document.getElementById('h-uptime').textContent=pad(Math.floor(uptime/60))+':'+pad(uptime%60);
+}
+setInterval(tickLocal,1000); tickLocal();
+setInterval(()=>{
+  document.getElementById('cpu-b').style.width=(20+Math.floor(Math.random()*40))+'%';
+  document.getElementById('mem-b').style.width=(40+Math.floor(Math.random()*30))+'%';
+},3000);
+
+// â”€â”€ RENDER CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderConfig(cfg){
+  // Agents
+  const al=document.getElementById('agent-list'); al.innerHTML='';
+  cfg.agents.forEach(a=>{
+    al.innerHTML+=`<a class="ar" href="https://claude.ai" target="_blank">
+      <div class="ai2"><i class="ti ${a.icone}"></i></div>
+      <div class="an"><div class="an1">${a.nom.toUpperCase()}</div><div class="an2">${a.role}</div></div>
+      <div class="ado"></div></a>`;
+  });
+  // Projets
+  const pg=document.getElementById('proj-grid'); pg.innerHTML='';
+  cfg.projets.forEach(p=>{
+    const warn=p.id==='P-000';
+    pg.innerHTML+=`<a class="pc" href="https://claude.ai" target="_blank">
+      <div class="pi">${p.id}</div>
+      <div class="pn">${p.nom.toUpperCase()}</div>
+      <div class="pd">${p.desc}</div>
+      <div class="pb2"><div class="pf" style="width:${p.pct}%;${warn?'background:var(--warn);box-shadow:0 0 6px var(--warn)':''}"></div></div>
+      <div class="pp2" style="${warn?'color:var(--warn)':''}">${p.pct}%</div></a>`;
+  });
+  // RÃ©unions
+  const rl=document.getElementById('reunion-list'); rl.innerHTML='';
+  cfg.reunions.forEach(r=>{
+    rl.innerHTML+=`<div class="rr"><div class="rd">${r.jour}</div><div class="rt">${r.heure}</div><div class="rn">${r.nom}</div></div>`;
+  });
+}
+
+// â”€â”€ RENDER METEO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderMeteo(m){
+  if(!m.active){document.getElementById('w-status').textContent='Configurer config.json pour activer';return}
+  document.getElementById('w-ville').textContent=(m.ville||'').toUpperCase();
+  document.getElementById('w-temp').textContent=m.temp+'Â°';
+  document.getElementById('w-desc').textContent=m.description||'';
+  document.getElementById('w-details').textContent=`Ressenti ${m.ressenti}Â° Â· HumiditÃ© ${m.humidite}%`;
+  document.getElementById('w-status').textContent='';
+}
+
+// â”€â”€ WEBSOCKET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function connect(){
+  const badge=document.getElementById('ws-badge');
+  try{
+    ws=new WebSocket(`ws://localhost:${PORT}`);
+    ws.onopen=()=>{
+      badge.className='ws-badge ws-ok'; badge.textContent='CONNECTÃ‰';
+      log('WS','Connexion serveur Ã©tablie','var(--ok)');
+    };
+    ws.onmessage=e=>{
+      const d=JSON.parse(e.data);
+      if(d.type==='init'){ renderConfig(d.config); log('SYS','Configuration chargÃ©e'); }
+      if(d.type==='time'){
+        document.getElementById('clk').textContent=d.heure;
+        document.getElementById('dat').textContent=(d.jour||'').toUpperCase()+' '+String(d.date).padStart(2,'0')+' '+(d.mois||'').toUpperCase()+' '+d.annee;
+      }
+      if(d.type==='status'){
+        document.getElementById('m-mem').textContent=d.memory+'M';
+        uptime=d.uptime;
+      }
+      if(d.type==='meteo') renderMeteo(d);
+    };
+    ws.onclose=()=>{
+      badge.className='ws-badge ws-err'; badge.textContent='HORS LIGNE';
+      log('WS','Connexion perdue â€” reconnexion...','var(--warn)');
+      setTimeout(connect,3000);
+    };
+    ws.onerror=()=>ws.close();
+  }catch(e){ setTimeout(connect,3000); }
+}
+
+// Charge config locale en fallback
+fetch(`http://localhost:${PORT}/api/config`)
+  .then(r=>r.json()).then(renderConfig).catch(()=>{});
+fetch(`http://localhost:${PORT}/api/meteo`)
+  .then(r=>r.json()).then(renderMeteo).catch(()=>{});
+
+connect();
+</script>
+<script>
+const cv=document.getElementById('globe'),ctx=cv.getContext('2d');
+let W,H,cx,cy,R,pts=[],arcs=[],rings=[];
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;cx=W/2;cy=H/2;R=Math.min(W,H)*.27;init();}
+function init(){pts=[];for(let i=0;i<300;i++){const phi=Math.acos(2*Math.random()-1),theta=Math.random()*Math.PI*2;pts.push({phi,theta,speed:(Math.random()-.5)*.0003,size:Math.random()*1.6+.3,alpha:Math.random()*.7+.3,pulse:Math.random()*Math.PI*2});}arcs=[];for(let i=0;i<16;i++)arcs.push({phi1:Math.random()*Math.PI,phi2:Math.random()*Math.PI,th1:Math.random()*Math.PI*2,th2:Math.random()*Math.PI*2,alpha:Math.random()*.25+.04,w:Math.random()*.7+.2});rings=[.55,.78,.95,1.12].map(s=>({scale:s,tilt:Math.random()*.5-.25,speed:(Math.random()-.5)*.0004,angle:Math.random()*Math.PI*2}));}
+function proj(phi,theta){const x=Math.sin(phi)*Math.cos(theta),y=Math.cos(phi),z=Math.sin(phi)*Math.sin(theta);return{x:cx+x*R,y:cy-y*R,z};}
+let t=0,rot=0;
+function draw(){ctx.clearRect(0,0,W,H);t+=.016;rot+=.0005;let g=ctx.createRadialGradient(cx,cy,R*.3,cx,cy,R*1.5);g.addColorStop(0,'rgba(0,60,140,.1)');g.addColorStop(.6,'rgba(0,150,255,.05)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,R*1.5,0,Math.PI*2);ctx.fill();arcs.forEach(a=>{const p1=proj(a.phi1,a.th1+rot),p2=proj(a.phi2,a.th2+rot);if(p1.z<0||p2.z<0)return;const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2-Math.abs(p1.x-p2.x)*.25;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.quadraticCurveTo(mx,my,p2.x,p2.y);ctx.strokeStyle=`rgba(0,180,255,${a.alpha*(.5+.5*Math.sin(t+a.th1))})`;ctx.lineWidth=a.w;ctx.stroke();});rings.forEach(r=>{r.angle+=r.speed;ctx.save();ctx.translate(cx,cy);ctx.rotate(r.angle);ctx.scale(1,Math.sin(r.tilt+.6));ctx.beginPath();ctx.arc(0,0,R*r.scale,0,Math.PI*2);ctx.strokeStyle='rgba(0,200,255,.1)';ctx.lineWidth=.7;ctx.stroke();const rx=Math.cos(t*.4)*R*r.scale,ry=Math.sin(t*.4)*R*r.scale;ctx.beginPath();ctx.arc(rx,ry,2.5,0,Math.PI*2);ctx.fillStyle='rgba(0,220,255,.9)';ctx.fill();ctx.restore();});for(let lng=0;lng<Math.PI*2;lng+=Math.PI/6){ctx.beginPath();let f=true;for(let lat=0;lat<=Math.PI;lat+=.05){const p=proj(lat,lng+rot);if(p.z<0){f=true;continue;}f?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);f=false;}ctx.strokeStyle='rgba(0,140,255,.07)';ctx.lineWidth=.5;ctx.stroke();}for(let lat=Math.PI/6;lat<Math.PI;lat+=Math.PI/6){ctx.beginPath();let f=true;for(let lng=0;lng<=Math.PI*2;lng+=.05){const p=proj(lat,lng+rot);if(p.z<0){f=true;continue;}f?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);f=false;}ctx.strokeStyle='rgba(0,140,255,.07)';ctx.lineWidth=.5;ctx.stroke();}ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.strokeStyle='rgba(0,180,255,.18)';ctx.lineWidth=1;ctx.stroke();pts.forEach(p=>{p.theta+=p.speed;const pos=proj(p.phi,p.theta+rot);if(pos.z<0)return;const a=p.alpha*(.5+.5*Math.sin(t*1.5+p.pulse))*pos.z,sz=p.size*(.4+.6*pos.z);const pg=ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,sz*4);pg.addColorStop(0,`rgba(0,210,255,${a*.5})`);pg.addColorStop(1,'transparent');ctx.fillStyle=pg;ctx.beginPath();ctx.arc(pos.x,pos.y,sz*4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(pos.x,pos.y,sz,0,Math.PI*2);ctx.fillStyle=`rgba(120,225,255,${a})`;ctx.fill();});const cp=ctx.createRadialGradient(cx,cy,0,cx,cy,R*.12);cp.addColorStop(0,`rgba(0,160,255,${.12+.04*Math.sin(t*2)})`);cp.addColorStop(1,'transparent');ctx.fillStyle=cp;ctx.beginPath();ctx.arc(cx,cy,R*.12,0,Math.PI*2);ctx.fill();requestAnimationFrame(draw);}
+window.addEventListener('resize',resize);resize();draw();
+</script>
+</body>
+</html>
+
+
