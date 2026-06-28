@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>JARVIS OS — ATELIER AUGMENTÉ</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -357,12 +358,12 @@ body::after{
     </div>
     <div class="panel">
       <div class="panel-title"><span class="pt-label">PROJETS EN COURS</span><span class="pt-tag tag-ok">6/6</span></div>
-      <div class="proj"><div class="proj-head"><div><div class="proj-name">The Crew</div><div class="proj-id">P-001</div></div><div class="proj-pct">35%</div></div><div class="bar"><div class="bar-fill" style="width:35%"></div></div></div>
-      <div class="proj"><div class="proj-head"><div><div class="proj-name">Patrimoine</div><div class="proj-id">P-002</div></div><div class="proj-pct">20%</div></div><div class="bar"><div class="bar-fill" style="width:20%"></div></div></div>
-      <div class="proj"><div class="proj-head"><div><div class="proj-name">Administration</div><div class="proj-id">P-003</div></div><div class="proj-pct">50%</div></div><div class="bar"><div class="bar-fill" style="width:50%"></div></div></div>
-      <div class="proj"><div class="proj-head"><div><div class="proj-name">Australie</div><div class="proj-id">P-004</div></div><div class="proj-pct">60%</div></div><div class="bar"><div class="bar-fill" style="width:60%"></div></div></div>
-      <div class="proj"><div class="proj-head"><div><div class="proj-name">Communication</div><div class="proj-id">P-005</div></div><div class="proj-pct">10%</div></div><div class="bar"><div class="bar-fill" style="width:10%"></div></div></div>
-      <div class="proj"><div class="proj-head"><div><div class="proj-name">JARVIS OS</div><div class="proj-id">P-000</div></div><div class="proj-pct">15%</div></div><div class="bar"><div class="bar-fill" style="width:15%"></div></div></div>
+      <div class="proj"><div class="proj-head"><div><div class="proj-name" id="nom-p001">The Crew</div><div class="proj-id">P-001</div></div><div class="proj-pct" id="pct-p001">35%</div></div><div class="bar"><div class="bar-fill" id="bar-p001" style="width:35%"></div></div></div>
+      <div class="proj"><div class="proj-head"><div><div class="proj-name" id="nom-p002">Patrimoine</div><div class="proj-id">P-002</div></div><div class="proj-pct" id="pct-p002">20%</div></div><div class="bar"><div class="bar-fill" id="bar-p002" style="width:20%"></div></div></div>
+      <div class="proj"><div class="proj-head"><div><div class="proj-name" id="nom-p003">Administration</div><div class="proj-id">P-003</div></div><div class="proj-pct" id="pct-p003">50%</div></div><div class="bar"><div class="bar-fill" id="bar-p003" style="width:50%"></div></div></div>
+      <div class="proj"><div class="proj-head"><div><div class="proj-name" id="nom-p004">Australie</div><div class="proj-id">P-004</div></div><div class="proj-pct" id="pct-p004">60%</div></div><div class="bar"><div class="bar-fill" id="bar-p004" style="width:60%"></div></div></div>
+      <div class="proj"><div class="proj-head"><div><div class="proj-name" id="nom-p005">Communication</div><div class="proj-id">P-005</div></div><div class="proj-pct" id="pct-p005">10%</div></div><div class="bar"><div class="bar-fill" id="bar-p005" style="width:10%"></div></div></div>
+      <div class="proj"><div class="proj-head"><div><div class="proj-name" id="nom-p000">JARVIS OS</div><div class="proj-id">P-000</div></div><div class="proj-pct" id="pct-p000">15%</div></div><div class="bar"><div class="bar-fill" id="bar-p000" style="width:15%"></div></div></div>
     </div>
     <div class="panel" style="flex:1">
       <div class="panel-title"><span class="pt-label">AGENDA</span><span class="pt-tag tag-run">SYNC</span></div>
@@ -777,6 +778,86 @@ async function loadMeteo(){
 }
 loadMeteo(); setInterval(loadMeteo,600000);
 
+// ══════════════════════ SUPABASE — CONNEXION RÉELLE
+const SUPA_URL = 'https://nrubwqrcbhtaxhqmihud.supabase.co';
+const SUPA_KEY = 'sb_publishable_MLQAsyAbCFkCq3a_XOQhlg_PE1Ljk9d';
+const USER_ID  = 'bb3562a4-158f-4a1a-a92e-3552bd219997';
+const db = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── Charger les projets et mettre à jour les barres
+async function loadProjects() {
+  const { data, error } = await db.from('projects').select('*').eq('user_id', USER_ID).order('priorite');
+  if (error || !data) return;
+  // Mettre à jour chaque barre de progression
+  const barIds = ['p001','p002','p003','p004','p005','p000'];
+  const codes  = ['P-001','P-002','P-003','P-004','P-005','P-000'];
+  data.forEach(p => {
+    const idx = codes.indexOf(p.code);
+    if (idx === -1) return;
+    const bid = barIds[idx];
+    const fill = document.getElementById('bar-'+bid);
+    const pct  = document.getElementById('pct-'+bid);
+    const name = document.getElementById('nom-'+bid);
+    if (fill) fill.style.width = p.progression + '%';
+    if (pct)  pct.textContent  = p.progression + '%';
+    if (name) name.textContent  = p.nom;
+  });
+  // Recalculer le global
+  const avg = Math.round(data.reduce((s,p) => s+p.progression, 0) / data.length);
+  document.querySelectorAll('.global-pct').forEach(e => e.textContent = avg + '%');
+}
+
+// ── Charger les tâches du jour
+async function loadTasks() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await db.from('tasks')
+    .select('*, projects(nom)')
+    .eq('user_id', USER_ID)
+    .neq('statut','done')
+    .order('priorite')
+    .limit(5);
+  if (!data || !data.length) return;
+  const el = document.getElementById('tasks-list');
+  if (!el) return;
+  el.innerHTML = data.map(t =>
+    `<div class="ml"><span style="color:var(--o2);margin-right:4px">${t.priorite===1?'●':'○'}</span>${t.titre}${t.projects?' <span style="color:var(--w3);font-size:.5rem">· ${t.projects.nom}</span>':''}</div>`
+  ).join('');
+}
+
+// ── Sauvegarder une conversation
+async function saveConversation(role, contenu, type='texte') {
+  await db.from('conversations').insert({ user_id: USER_ID, role, contenu, type });
+}
+
+// ── Sauvegarder le briefing du jour
+async function saveBriefing(contenu) {
+  const date = new Date().toISOString().split('T')[0];
+  await db.from('briefings').upsert({ user_id: USER_ID, date, contenu }, { onConflict: 'user_id,date' });
+}
+
+// ── Ajouter une tâche rapide par voix
+async function addTaskFromVoice(titre, projectCode) {
+  let project_id = null;
+  if (projectCode) {
+    const { data } = await db.from('projects').select('id').eq('user_id', USER_ID).eq('code', projectCode).single();
+    if (data) project_id = data.id;
+  }
+  const { error } = await db.from('tasks').insert({ user_id: USER_ID, titre, project_id, priorite: 2 });
+  return !error;
+}
+
+// ── Init Supabase data
+async function initSupabase() {
+  await loadProjects();
+  await loadTasks();
+  // Log connexion
+  const logEl = document.getElementById('lt4');
+  if (logEl) logEl.parentElement.innerHTML =
+    `<span class="log-ts" id="lt4">${new Date().toTimeString().slice(0,8)}</span><span class="log-ok">[OK]</span> Supabase connecté`;
+}
+initSupabase();
+setInterval(loadProjects, 30000); // refresh toutes les 30s
+
 // ══════════════════════ SPEECH
 const synth=window.speechSynthesis; let typT=null;
 function typeText(text,cb){const el=document.getElementById('speech-text');if(!el)return;el.textContent='';let i=0;clearInterval(typT);typT=setInterval(()=>{if(i<text.length){el.textContent+=text[i];i++;}else{clearInterval(typT);if(cb)cb();}},20);}
@@ -830,16 +911,29 @@ function toggleMic(){
   recognition.start();
 }
 
-function handleVoice(text){
+async function handleVoice(text){
   bloom.strength = 1.6;
+  saveConversation('user', text, 'vocal');
   const t=text.toLowerCase();
   let reply='';
-  if(t.includes('hier')||t.includes('accompli')){localStorage.setItem('jarvis_hier',text);reply='Noté. J\'enregistre vos accomplissements pour demain.';}
+  // Ajouter une tâche
+  if(t.includes('ajoute') || t.includes('créer tâche') || t.includes('nouvelle tâche')){
+    const titre = text.replace(/ajoute|créer tâche|nouvelle tâche/gi,'').trim();
+    const ok = await addTaskFromVoice(titre);
+    reply = ok ? `Tâche ajoutée : "${titre}". Elle est enregistrée dans votre base.` : 'Erreur lors de l\'ajout de la tâche.';
+    if(ok) loadTasks();
+  }
+  else if(t.includes('hier')||t.includes('accompli')){
+    localStorage.setItem('jarvis_hier',text);
+    saveBriefing(text);
+    reply='Noté. J\'enregistre vos accomplissements pour demain.';
+  }
   else if(t.includes('météo')){reply='Météo Sydney en consultation.';}
   else if(t.includes('réunion')||t.includes('agenda')){reply=buildBriefing();}
   else if(t.includes('projet')||t.includes('statut')){reply='Six projets actifs. Australie 60%. The Crew 35%. Communication 10%. Global 32%.';}
   else{reply='Compris, Loris. Autre chose ?';}
   showVoiceOverlay('JARVIS', reply);
+  saveConversation('jarvis', reply, 'vocal');
   jarvisSpeak(reply, hideVoiceOverlay);
 }
 
