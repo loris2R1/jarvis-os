@@ -3,373 +3,353 @@
 <head>
 <meta charset="UTF-8">
 <title>JARVIS OS</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --c:#ff9500;--cd:rgba(255,149,0,0.12);--cb:rgba(255,149,0,0.35);
-  --cg:0 0 14px rgba(255,149,0,0.45);--bg:#040200;--panel:rgba(12,6,0,0.82);
-  --txt:#ffd080;--mono:'Share Tech Mono',monospace;--hud:'Orbitron',sans-serif;
-  --ok:#00ff88;--warn:#ffdd00;--err:#ff3355;
-}
-html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);font-family:var(--mono);overflow:hidden;user-select:none}
+html,body{width:100%;height:100%;background:#040200;overflow:hidden;user-select:none;font-family:'Share Tech Mono',monospace}
 canvas{position:fixed;inset:0;z-index:1}
 .vignette{position:fixed;inset:0;z-index:2;pointer-events:none;
-  background:radial-gradient(ellipse at center,transparent 28%,rgba(4,2,0,0.92) 75%)}
-.os{position:fixed;inset:0;display:grid;grid-template-rows:52px 1fr 40px;grid-template-columns:248px 1fr 238px;gap:6px;padding:6px;z-index:3}
+  background:radial-gradient(ellipse at center,transparent 22%,rgba(4,2,0,0.94) 72%)}
 
-/* TOPBAR */
-.topbar{grid-column:1/-1;grid-row:1;display:flex;align-items:center;gap:12px;padding:0 12px;border-bottom:1px solid var(--cb);background:rgba(12,6,0,0.7)}
-.topbar-logo{font-family:var(--hud);font-size:1.25rem;font-weight:700;color:var(--c);letter-spacing:4px;text-shadow:var(--cg)}
-.topbar-sub{font-size:.6rem;color:rgba(255,149,0,0.6);letter-spacing:2px}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:20px}
-#clock{font-family:var(--hud);font-size:1.1rem;color:var(--c);text-shadow:var(--cg)}
-#date-disp{font-size:.62rem;color:rgba(255,149,0,0.6);letter-spacing:1px}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 2s infinite}
+/* ── TOPBAR minimaliste ── */
+.topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:10;
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+  border-bottom:1px solid rgba(255,149,0,0.2);background:rgba(4,2,0,0.6);
+  backdrop-filter:blur(8px)}
+.logo{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;
+  color:#ff9500;letter-spacing:5px;text-shadow:0 0 14px rgba(255,149,0,0.6)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:20px;color:rgba(255,149,0,0.5);font-size:.6rem}
+#clock{font-family:'Orbitron',sans-serif;font-size:.9rem;color:#ff9500;text-shadow:0 0 10px rgba(255,149,0,0.5)}
+.online-dot{width:6px;height:6px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;animation:pulse 2s infinite}
 
-/* LEFT */
-.left{grid-column:1;grid-row:2;display:flex;flex-direction:column;gap:6px}
-/* RIGHT */
-.right{grid-column:3;grid-row:2;display:flex;flex-direction:column;gap:6px}
-/* CENTER transparent */
-.center{grid-column:2;grid-row:2;pointer-events:none}
+/* ── SPEECH BOX ── */
+.speech-area{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  z-index:10;width:min(680px,90vw);text-align:center}
+.speech-name{font-family:'Orbitron',sans-serif;font-size:.55rem;color:rgba(255,149,0,0.5);
+  letter-spacing:3px;margin-bottom:8px}
+.speech-bubble{background:rgba(8,4,0,0.75);border:1px solid rgba(255,149,0,0.3);
+  border-radius:4px;padding:16px 22px;backdrop-filter:blur(10px);
+  font-size:.78rem;line-height:1.8;color:#ffd080;min-height:60px;
+  box-shadow:0 0 30px rgba(255,100,0,0.1);transition:opacity .3s}
+.speech-bubble.listening{border-color:rgba(255,149,0,0.7);box-shadow:0 0 30px rgba(255,100,0,0.3)}
+#speech-text{display:inline}
+.cursor{display:inline-block;width:2px;height:.85em;background:#ff9500;
+  vertical-align:middle;margin-left:2px;animation:blink 0.7s infinite}
 
-/* PANEL */
-.panel{background:var(--panel);border:1px solid var(--cb);padding:10px;border-radius:2px;backdrop-filter:blur(4px)}
-.panel-title{font-family:var(--hud);font-size:.58rem;color:var(--c);letter-spacing:2px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--cd);display:flex;align-items:center;gap:6px}
-.panel-title i{font-size:.85rem}
+/* ── MIC BUTTON ── */
+.mic-wrap{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:10;text-align:center}
+.mic-btn{width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,149,0,0.4);
+  background:rgba(255,149,0,0.08);color:#ff9500;font-size:1.3rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+  box-shadow:0 0 20px rgba(255,100,0,0.1)}
+.mic-btn:hover,.mic-btn.active{background:rgba(255,149,0,0.2);border-color:#ff9500;
+  box-shadow:0 0 30px rgba(255,100,0,0.4)}
+.mic-btn.active{animation:micPulse 1s infinite}
+.mic-label{font-size:.5rem;color:rgba(255,149,0,0.35);letter-spacing:2px;margin-top:5px}
 
-/* MISSION */
-.mission-line{font-size:.65rem;line-height:1.7;color:rgba(255,208,128,0.8)}
-.status-pill{display:inline-block;padding:1px 7px;border:1px solid var(--ok);color:var(--ok);font-size:.55rem;border-radius:10px;margin-bottom:6px}
+/* ── INFO LATÉRAUX discrets ── */
+.side-info{position:fixed;top:50%;transform:translateY(-50%);z-index:10;
+  display:flex;flex-direction:column;gap:10px}
+.side-info.left{left:18px}
+.side-info.right{right:18px;align-items:flex-end}
+.info-chip{font-size:.55rem;color:rgba(255,149,0,0.35);letter-spacing:1px;line-height:1.8;white-space:nowrap}
+.info-chip strong{color:rgba(255,149,0,0.65)}
 
-/* METEO */
-.meteo-big{font-family:var(--hud);font-size:1.6rem;color:var(--c);text-shadow:var(--cg)}
-.meteo-desc{font-size:.6rem;color:rgba(255,208,128,0.6);margin-top:2px}
+/* ── HUD corners ── */
+.hc{position:fixed;width:22px;height:22px;z-index:11;pointer-events:none}
+.hc::before,.hc::after{content:'';position:absolute;background:rgba(255,149,0,0.5)}
+.hc::before{width:100%;height:1px;top:0}.hc::after{width:1px;height:100%;top:0}
+.hc.tl{top:3px;left:3px}.hc.tr{top:3px;right:3px;transform:scaleX(-1)}
+.hc.bl{bottom:3px;left:3px;transform:scaleY(-1)}.hc.br{bottom:3px;right:3px;transform:scale(-1)}
 
-/* AGENTS */
-.agent{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--cd)}
-.agent:last-child{border-bottom:none}
-.agent i{font-size:1rem;color:var(--c)}
-.agent-name{font-size:.65rem;color:var(--c)}
-.agent-role{font-size:.55rem;color:rgba(255,208,128,0.5)}
-.agent-dot{width:5px;height:5px;border-radius:50%;background:var(--ok);margin-left:auto;box-shadow:0 0 5px var(--ok)}
+/* ── SCAN LINE ── */
+body::after{content:'';position:fixed;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,149,0,0.3),transparent);
+  animation:scan 9s linear infinite;z-index:6;pointer-events:none}
 
-/* PROJETS */
-.proj{margin-bottom:7px}
-.proj-head{display:flex;justify-content:space-between;font-size:.6rem;margin-bottom:3px}
-.proj-pct{color:var(--c)}
-.bar{height:3px;background:rgba(255,149,0,0.15);border-radius:2px;overflow:hidden}
-.bar-fill{height:100%;background:linear-gradient(90deg,var(--c),#ffcc44);border-radius:2px;transition:width .4s}
-
-/* METRICS */
-.metric{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--cd);font-size:.62rem}
-.metric:last-child{border-bottom:none}
-.metric-val{font-family:var(--hud);color:var(--c);font-size:.75rem}
-
-/* LOG */
-.log-line{font-size:.58rem;padding:2px 0;border-bottom:1px solid rgba(255,149,0,0.06);color:rgba(255,208,128,0.55)}
-.log-line span{color:var(--c)}
-
-/* REUNIONS */
-.reunion{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--cd);font-size:.6rem}
-.reunion:last-child{border-bottom:none}
-.reunion-day{font-family:var(--hud);font-size:.5rem;color:var(--c);min-width:50px}
-
-/* ACTIONS */
-.btn{display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--cb);background:var(--cd);color:var(--txt);font-family:var(--mono);font-size:.62rem;cursor:pointer;border-radius:2px;width:100%;margin-bottom:5px;transition:background .2s}
-.btn:hover{background:rgba(255,149,0,0.25)}
-.btn i{color:var(--c);font-size:.9rem}
-
-/* BOTTOMBAR */
-.bottombar{grid-column:1/-1;grid-row:3;display:flex;align-items:center;gap:16px;padding:0 12px;border-top:1px solid var(--cb);background:rgba(12,6,0,0.7);font-size:.55rem;color:rgba(255,149,0,0.5)}
-.bot-sep{opacity:0.3}
-
-/* HUD corners */
-.hud-corner{position:fixed;width:30px;height:30px;z-index:4;pointer-events:none}
-.hud-corner::before,.hud-corner::after{content:'';position:absolute;background:var(--c);opacity:.7}
-.hud-corner::before{width:100%;height:1px;top:0}
-.hud-corner::after{width:1px;height:100%;top:0}
-.hud-tl{top:4px;left:4px}
-.hud-tr{top:4px;right:4px;transform:scaleX(-1)}
-.hud-bl{bottom:4px;left:4px;transform:scaleY(-1)}
-.hud-br{bottom:4px;right:4px;transform:scale(-1)}
-
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.2}}
-@keyframes scanLine{0%{top:-2px}100%{top:100vh}}
-body::after{content:'';position:fixed;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,149,0,0.4),transparent);animation:scanLine 8s linear infinite;z-index:5;pointer-events:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes scan{0%{top:-2px}100%{top:100vh}}
+@keyframes micPulse{0%,100%{box-shadow:0 0 20px rgba(255,100,0,0.3)}50%{box-shadow:0 0 40px rgba(255,100,0,0.7)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
 
 <canvas id="globe"></canvas>
 <div class="vignette"></div>
+<div class="hc tl"></div><div class="hc tr"></div><div class="hc bl"></div><div class="hc br"></div>
 
-<!-- HUD corners -->
-<div class="hud-corner hud-tl"></div>
-<div class="hud-corner hud-tr"></div>
-<div class="hud-corner hud-bl"></div>
-<div class="hud-corner hud-br"></div>
-
-<div class="os">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div>
-      <div class="topbar-logo">J.A.R.V.I.S</div>
-      <div class="topbar-sub">PERSONAL OPERATING SYSTEM · v0.1</div>
-    </div>
-    <div class="topbar-right">
-      <div><div id="date-disp">—</div></div>
-      <div id="clock">00:00:00</div>
-      <div class="dot"></div>
-    </div>
+<div class="topbar">
+  <div class="logo">J.A.R.V.I.S</div>
+  <div style="font-size:.5rem;color:rgba(255,149,0,0.35);letter-spacing:2px">PERSONAL OS · v0.1</div>
+  <div class="topbar-right">
+    <span id="date-disp"></span>
+    <span id="clock">--:--:--</span>
+    <div class="online-dot"></div>
   </div>
+</div>
 
-  <!-- LEFT -->
-  <div class="left">
+<div class="side-info left">
+  <div class="info-chip"><strong>LORIS DERRIEN</strong></div>
+  <div class="info-chip" id="meteo-chip">SYDNEY ··</div>
+  <div class="info-chip" id="agents-chip">6 AGENTS EN LIGNE</div>
+</div>
 
-    <div class="panel">
-      <div class="panel-title"><i class="ti ti-shield-bolt"></i>MISSION ACTIVE</div>
-      <div class="status-pill">PHOENIX PROTOCOL</div>
-      <div class="mission-line">Construire The Crew</div>
-      <div class="mission-line">Indépendance financière</div>
-      <div class="mission-line">Sydney · Australie</div>
-      <div class="mission-line" style="margin-top:6px;color:rgba(255,149,0,0.45);font-size:.58rem">PROPRIÉTAIRE — LORIS DERRIEN</div>
-    </div>
+<div class="side-info right">
+  <div class="info-chip"><strong id="next-meeting">—</strong></div>
+  <div class="info-chip">PHOENIX PROTOCOL</div>
+  <div class="info-chip" id="global-chip">PROGRESSION 32%</div>
+</div>
 
-    <div class="panel">
-      <div class="panel-title"><i class="ti ti-cloud"></i>MÉTÉO · SYDNEY</div>
-      <div id="meteo-content">
-        <div class="meteo-big" id="temp">--°</div>
-        <div class="meteo-desc" id="meteo-desc">Chargement...</div>
-        <div style="font-size:.58rem;margin-top:4px;color:rgba(255,149,0,0.45)" id="meteo-extra"></div>
-      </div>
-    </div>
-
-    <div class="panel" style="flex:1">
-      <div class="panel-title"><i class="ti ti-robot"></i>AGENTS</div>
-      <div class="agent"><i class="ti ti-chart-arrows"></i><div><div class="agent-name">ATLAS</div><div class="agent-role">The Crew · Stratégie</div></div><div class="agent-dot"></div></div>
-      <div class="agent"><i class="ti ti-coin"></i><div><div class="agent-name">MERCURY</div><div class="agent-role">Patrimoine · Finance</div></div><div class="agent-dot"></div></div>
-      <div class="agent"><i class="ti ti-file-text"></i><div><div class="agent-name">ADA</div><div class="agent-role">Admin · Documents</div></div><div class="agent-dot"></div></div>
-      <div class="agent"><i class="ti ti-map-pin"></i><div><div class="agent-name">ORION</div><div class="agent-role">Australie · Terrain</div></div><div class="agent-dot"></div></div>
-      <div class="agent"><i class="ti ti-sparkles"></i><div><div class="agent-name">NOVA</div><div class="agent-role">Communication · Marque</div></div><div class="agent-dot"></div></div>
-      <div class="agent"><i class="ti ti-bulb"></i><div><div class="agent-name">ECHO</div><div class="agent-role">Recherche · Innovation</div></div><div class="agent-dot"></div></div>
-    </div>
-
+<div class="speech-area">
+  <div class="speech-name">J · A · R · V · I · S</div>
+  <div class="speech-bubble" id="bubble">
+    <span id="speech-text"></span><span class="cursor" id="cursor"></span>
   </div>
+</div>
 
-  <!-- CENTER (transparent — globe visible) -->
-  <div class="center"></div>
-
-  <!-- RIGHT -->
-  <div class="right">
-
-    <div class="panel">
-      <div class="panel-title"><i class="ti ti-chart-bar"></i>MÉTRIQUES</div>
-      <div class="metric"><span>Projets actifs</span><span class="metric-val">6</span></div>
-      <div class="metric"><span>Agents en ligne</span><span class="metric-val">6/6</span></div>
-      <div class="metric"><span>Progress global</span><span class="metric-val" id="global-pct">--</span></div>
-      <div class="metric"><span>Phase</span><span class="metric-val" style="font-size:.58rem">PHOENIX</span></div>
-    </div>
-
-    <div class="panel" style="flex:1">
-      <div class="panel-title"><i class="ti ti-rocket"></i>PROJETS</div>
-      <div class="proj"><div class="proj-head"><span>The Crew</span><span class="proj-pct">35%</span></div><div class="bar"><div class="bar-fill" style="width:35%"></div></div></div>
-      <div class="proj"><div class="proj-head"><span>Patrimoine</span><span class="proj-pct">20%</span></div><div class="bar"><div class="bar-fill" style="width:20%"></div></div></div>
-      <div class="proj"><div class="proj-head"><span>Administration</span><span class="proj-pct">50%</span></div><div class="bar"><div class="bar-fill" style="width:50%"></div></div></div>
-      <div class="proj"><div class="proj-head"><span>Australie</span><span class="proj-pct">60%</span></div><div class="bar"><div class="bar-fill" style="width:60%"></div></div></div>
-      <div class="proj"><div class="proj-head"><span>Communication</span><span class="proj-pct">10%</span></div><div class="bar"><div class="bar-fill" style="width:10%"></div></div></div>
-      <div class="proj"><div class="proj-head"><span>JARVIS OS</span><span class="proj-pct">15%</span></div><div class="bar"><div class="bar-fill" style="width:15%"></div></div></div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-title"><i class="ti ti-calendar"></i>RÉUNIONS</div>
-      <div class="reunion"><div class="reunion-day">MER</div><span>Comité Patrimoine</span></div>
-      <div class="reunion"><div class="reunion-day">DIM 09:00</div><span>Investissements</span></div>
-      <div class="reunion"><div class="reunion-day">DIM 09:30</div><span>Administration</span></div>
-      <div class="reunion"><div class="reunion-day">DIM 10:00</div><span>The Crew</span></div>
-    </div>
-
-  </div>
-
-  <!-- BOTTOMBAR -->
-  <div class="bottombar">
-    <span>JARVIS OS v0.1</span>
-    <span class="bot-sep">|</span>
-    <span>LORIS DERRIEN</span>
-    <span class="bot-sep">|</span>
-    <span>PHOENIX PROTOCOL ACTIF</span>
-    <span class="bot-sep">|</span>
-    <span id="bot-time">--:--:--</span>
-    <span style="margin-left:auto" id="bot-status">TOUS SYSTÈMES NOMINAUX</span>
-  </div>
-
+<div class="mic-wrap">
+  <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Parler à JARVIS">🎙️</button>
+  <div class="mic-label" id="mic-label">APPUYER POUR PARLER</div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════ GLOBE
-const cv = document.getElementById('globe');
-const ctx = cv.getContext('2d');
-let W, H, cx, cy, R, pts = [], arcs = [], orbs = [];
-const C = '#ff9500', C2 = '#ffcc44', C3 = 'rgba(255,149,0,';
+// ══════════════════════════════════════ GLOBE
+const cv = document.getElementById('globe'), ctx = cv.getContext('2d');
+let W,H,cx,cy,R,pts=[],arcs=[],orbs=[];
+const C3='rgba(255,149,0,';
 
-function resize() {
-  W = cv.width = window.innerWidth;
-  H = cv.height = window.innerHeight;
-  cx = W / 2; cy = H / 2;
-  R = Math.min(W, H) * 0.28;
-  init();
+function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;cx=W/2;cy=H/2;R=Math.min(W,H)*.3;init();}
+function init(){
+  pts=[];
+  for(let i=0;i<340;i++){const phi=Math.acos(2*Math.random()-1),theta=Math.random()*Math.PI*2;pts.push({phi,theta,spd:(Math.random()-.5)*.0003,sz:Math.random()*1.8+.3,a:Math.random()*.7+.3,pulse:Math.random()*Math.PI*2});}
+  arcs=[];
+  for(let i=0;i<22;i++)arcs.push({p1:Math.random()*Math.PI,p2:Math.random()*Math.PI,t1:Math.random()*Math.PI*2,t2:Math.random()*Math.PI*2,a:Math.random()*.18+.04,w:Math.random()*.8+.2});
+  orbs=[.65,.86,1.05,1.22].map(s=>({s,tilt:Math.random()*.6-.3,ang:Math.random()*Math.PI*2,spd:(Math.random()-.5)*.0004}));
 }
+function proj(phi,theta,rot){const x=Math.sin(phi)*Math.cos(theta+rot),y=Math.cos(phi),z=Math.sin(phi)*Math.sin(theta+rot);return{x:cx+x*R,y:cy-y*R,z};}
 
-function init() {
-  pts = [];
-  for (let i = 0; i < 320; i++) {
-    const phi = Math.acos(2 * Math.random() - 1);
-    const theta = Math.random() * Math.PI * 2;
-    pts.push({ phi, theta, spd: (Math.random() - 0.5) * 0.0003, sz: Math.random() * 1.8 + 0.3, a: Math.random() * 0.7 + 0.3, pulse: Math.random() * Math.PI * 2 });
-  }
-  arcs = [];
-  for (let i = 0; i < 20; i++) {
-    arcs.push({ p1: Math.random()*Math.PI, p2: Math.random()*Math.PI, t1: Math.random()*Math.PI*2, t2: Math.random()*Math.PI*2, a: Math.random()*0.2+0.05, w: Math.random()*0.8+0.2 });
-  }
-  orbs = [0.62, 0.82, 1.0, 1.18].map(s => ({ s, tilt: Math.random()*0.6-0.3, ang: Math.random()*Math.PI*2, spd: (Math.random()-0.5)*0.0005 }));
-}
-
-function proj(phi, theta, rot) {
-  const x = Math.sin(phi)*Math.cos(theta+rot);
-  const y = Math.cos(phi);
-  const z = Math.sin(phi)*Math.sin(theta+rot);
-  return { x: cx+x*R, y: cy-y*R, z };
-}
-
-let t = 0, rot = 0;
-
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-  t += 0.016; rot += 0.0005;
-
-  // Glow de fond
-  const bg = ctx.createRadialGradient(cx, cy, R*0.1, cx, cy, R*1.6);
-  bg.addColorStop(0, 'rgba(255,100,0,0.07)');
-  bg.addColorStop(0.5, 'rgba(255,80,0,0.04)');
-  bg.addColorStop(1, 'transparent');
-  ctx.fillStyle = bg;
-  ctx.beginPath(); ctx.arc(cx, cy, R*1.6, 0, Math.PI*2); ctx.fill();
-
-  // Grille latitude
-  for (let lat = Math.PI/6; lat < Math.PI; lat += Math.PI/6) {
-    ctx.beginPath(); let f = true;
-    for (let lng = 0; lng <= Math.PI*2; lng += 0.04) {
-      const p = proj(lat, lng, rot);
-      if (p.z < 0) { f = true; continue; }
-      f ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); f = false;
-    }
-    ctx.strokeStyle = C3+'0.06)'; ctx.lineWidth = 0.5; ctx.stroke();
-  }
-  // Grille longitude
-  for (let lng = 0; lng < Math.PI*2; lng += Math.PI/7) {
-    ctx.beginPath(); let f = true;
-    for (let lat = 0; lat <= Math.PI; lat += 0.04) {
-      const p = proj(lat, lng, rot);
-      if (p.z < 0) { f = true; continue; }
-      f ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); f = false;
-    }
-    ctx.strokeStyle = C3+'0.06)'; ctx.lineWidth = 0.5; ctx.stroke();
-  }
-
-  // Arcs
-  arcs.forEach(a => {
-    const p1 = proj(a.p1, a.t1, rot), p2 = proj(a.p2, a.t2, rot);
-    if (p1.z < 0 || p2.z < 0) return;
-    const mx = (p1.x+p2.x)/2, my = (p1.y+p2.y)/2 - Math.abs(p1.x-p2.x)*0.22;
-    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.quadraticCurveTo(mx, my, p2.x, p2.y);
-    ctx.strokeStyle = `rgba(255,180,0,${a.a*(0.4+0.6*Math.sin(t+a.t1))})`;
-    ctx.lineWidth = a.w; ctx.stroke();
-  });
-
-  // Anneaux orbitaux
-  orbs.forEach(o => {
-    o.ang += o.spd;
-    ctx.save(); ctx.translate(cx, cy); ctx.rotate(o.ang);
-    ctx.scale(1, Math.sin(Math.abs(o.tilt)+0.5));
-    ctx.beginPath(); ctx.arc(0, 0, R*o.s, 0, Math.PI*2);
-    ctx.strokeStyle = C3+'0.12)'; ctx.lineWidth = 0.8; ctx.stroke();
-    // Particule orbitale
-    const px = Math.cos(t*0.5)*R*o.s, py = Math.sin(t*0.5)*R*o.s;
-    const pg = ctx.createRadialGradient(px,py,0,px,py,5);
-    pg.addColorStop(0,'rgba(255,200,0,0.9)'); pg.addColorStop(1,'transparent');
-    ctx.fillStyle=pg; ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2); ctx.fill();
-    ctx.restore();
-  });
-
-  // Points
-  pts.forEach(p => {
-    p.theta += p.spd;
-    const pos = proj(p.phi, p.theta, rot);
-    if (pos.z < 0) return;
-    const a = p.a*(0.4+0.6*Math.sin(t*1.5+p.pulse))*pos.z;
-    const sz = p.sz*(0.4+0.6*pos.z);
-    const pg = ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,sz*5);
-    pg.addColorStop(0,`rgba(255,180,0,${a*0.4})`); pg.addColorStop(1,'transparent');
-    ctx.fillStyle=pg; ctx.beginPath(); ctx.arc(pos.x,pos.y,sz*5,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(pos.x,pos.y,sz,0,Math.PI*2);
-    ctx.fillStyle=`rgba(255,210,80,${a})`; ctx.fill();
-  });
-
-  // Contour sphère
-  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
-  ctx.strokeStyle=C3+'0.2)'; ctx.lineWidth=1; ctx.stroke();
-
-  // Noyau central
-  const core = ctx.createRadialGradient(cx,cy,0,cx,cy,R*0.13);
-  core.addColorStop(0,`rgba(255,200,50,${0.2+0.06*Math.sin(t*2)})`);
-  core.addColorStop(1,'transparent');
-  ctx.fillStyle=core; ctx.beginPath(); ctx.arc(cx,cy,R*0.13,0,Math.PI*2); ctx.fill();
-
+let t=0,rot=0,speaking=false;
+function draw(){
+  ctx.clearRect(0,0,W,H);t+=.016;rot+=.0005+(speaking?.0003:0);
+  const bg=ctx.createRadialGradient(cx,cy,R*.05,cx,cy,R*1.7);
+  bg.addColorStop(0,'rgba(255,80,0,0.08)');bg.addColorStop(.6,'rgba(255,60,0,0.03)');bg.addColorStop(1,'transparent');
+  ctx.fillStyle=bg;ctx.beginPath();ctx.arc(cx,cy,R*1.7,0,Math.PI*2);ctx.fill();
+  for(let lat=Math.PI/6;lat<Math.PI;lat+=Math.PI/6){ctx.beginPath();let f=true;for(let lng=0;lng<=Math.PI*2;lng+=.04){const p=proj(lat,lng,rot);if(p.z<0){f=true;continue;}f?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);f=false;}ctx.strokeStyle=C3+'0.07)';ctx.lineWidth=.5;ctx.stroke();}
+  for(let lng=0;lng<Math.PI*2;lng+=Math.PI/7){ctx.beginPath();let f=true;for(let lat=0;lat<=Math.PI;lat+=.04){const p=proj(lat,lng,rot);if(p.z<0){f=true;continue;}f?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);f=false;}ctx.strokeStyle=C3+'0.07)';ctx.lineWidth=.5;ctx.stroke();}
+  arcs.forEach(a=>{const p1=proj(a.p1,a.t1,rot),p2=proj(a.p2,a.t2,rot);if(p1.z<0||p2.z<0)return;const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2-Math.abs(p1.x-p2.x)*.22;ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.quadraticCurveTo(mx,my,p2.x,p2.y);ctx.strokeStyle=`rgba(255,180,0,${a.a*(.4+.6*Math.sin(t+a.t1))})`;ctx.lineWidth=a.w;ctx.stroke();});
+  orbs.forEach(o=>{o.ang+=o.spd;ctx.save();ctx.translate(cx,cy);ctx.rotate(o.ang);ctx.scale(1,Math.sin(Math.abs(o.tilt)+.5));ctx.beginPath();ctx.arc(0,0,R*o.s,0,Math.PI*2);ctx.strokeStyle=C3+(speaking?.18:.1)+')';ctx.lineWidth=.8;ctx.stroke();const px=Math.cos(t*.5)*R*o.s,py=Math.sin(t*.5)*R*o.s;const pg=ctx.createRadialGradient(px,py,0,px,py,speaking?7:5);pg.addColorStop(0,'rgba(255,200,0,0.9)');pg.addColorStop(1,'transparent');ctx.fillStyle=pg;ctx.beginPath();ctx.arc(px,py,speaking?7:5,0,Math.PI*2);ctx.fill();ctx.restore();});
+  pts.forEach(p=>{p.theta+=p.spd;const pos=proj(p.phi,p.theta,rot);if(pos.z<0)return;const a=p.a*(.4+.6*Math.sin(t*1.5+p.pulse))*pos.z,sz=p.sz*(.4+.6*pos.z);const pg=ctx.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,sz*5);pg.addColorStop(0,`rgba(255,180,0,${a*.4})`);pg.addColorStop(1,'transparent');ctx.fillStyle=pg;ctx.beginPath();ctx.arc(pos.x,pos.y,sz*5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(pos.x,pos.y,sz,0,Math.PI*2);ctx.fillStyle=`rgba(255,210,80,${a})`;ctx.fill();});
+  ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.strokeStyle=C3+(speaking?.28:.18)+')';ctx.lineWidth=speaking?1.5:1;ctx.stroke();
+  const core=ctx.createRadialGradient(cx,cy,0,cx,cy,R*.14);
+  core.addColorStop(0,`rgba(255,200,50,${.18+.07*Math.sin(t*2)})`);core.addColorStop(1,'transparent');
+  ctx.fillStyle=core;ctx.beginPath();ctx.arc(cx,cy,R*.14,0,Math.PI*2);ctx.fill();
   requestAnimationFrame(draw);
 }
+window.addEventListener('resize',resize);resize();draw();
 
-window.addEventListener('resize', resize);
-resize(); draw();
-
-// ═══════════════════════════════════════════════════════ CLOCK
-function updateClock() {
-  const now = new Date();
-  const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  const mois = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-  const h = String(now.getHours()).padStart(2,'0');
-  const m = String(now.getMinutes()).padStart(2,'0');
-  const s = String(now.getSeconds()).padStart(2,'0');
-  const time = `${h}:${m}:${s}`;
-  document.getElementById('clock').textContent = time;
-  document.getElementById('bot-time').textContent = time;
-  document.getElementById('date-disp').textContent = `${jours[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]} ${now.getFullYear()}`;
+// ══════════════════════════════════════ CLOCK
+function updateClock(){
+  const now=new Date();
+  const jours=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const mois=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  document.getElementById('clock').textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  document.getElementById('date-disp').textContent=`${jours[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]} ${now.getFullYear()}`;
 }
-setInterval(updateClock, 1000); updateClock();
+setInterval(updateClock,1000);updateClock();
 
-// ═══════════════════════════════════════════════════════ METEO
-async function loadMeteo() {
-  try {
-    const r = await fetch('https://api.openweathermap.org/data/2.5/weather?q=Sydney,AU&appid=fbc28d41ee7b2ecd60b2c633b418547c&units=metric&lang=fr');
-    const d = await r.json();
-    if (d.main) {
-      document.getElementById('temp').textContent = Math.round(d.main.temp)+'°C';
-      document.getElementById('meteo-desc').textContent = d.weather[0].description;
-      document.getElementById('meteo-extra').textContent = `Ressenti ${Math.round(d.main.feels_like)}° · Humidité ${d.main.humidity}%`;
-    }
-  } catch(e) {
-    document.getElementById('meteo-desc').textContent = 'Sydney, Australie';
-  }
+// ══════════════════════════════════════ METEO
+async function loadMeteo(){
+  try{
+    const r=await fetch('https://api.openweathermap.org/data/2.5/weather?q=Sydney,AU&appid=fbc28d41ee7b2ecd60b2c633b418547c&units=metric&lang=fr');
+    const d=await r.json();
+    if(d.main)document.getElementById('meteo-chip').textContent=`SYDNEY ${Math.round(d.main.temp)}°C · ${d.weather[0].description}`;
+  }catch(e){}
 }
 loadMeteo();
-setInterval(loadMeteo, 10*60*1000);
 
-// ═══════════════════════════════════════════════════════ METRICS
-const pcts = [35,20,50,60,10,15];
-const avg = Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
-document.getElementById('global-pct').textContent = avg+'%';
+// ══════════════════════════════════════ NEXT MEETING
+function getNextMeeting(){
+  const now=new Date();
+  const day=now.getDay();
+  const meetings=[
+    {day:3,h:0,m:0,nom:'Comité Patrimoine'},
+    {day:0,h:9,m:0,nom:'Investissements'},
+    {day:0,h:9,m:30,nom:'Administration'},
+    {day:0,h:10,m:0,nom:'The Crew'}
+  ];
+  const jours=['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
+  // trouver la prochaine
+  let next=null,minDiff=Infinity;
+  meetings.forEach(m=>{
+    let diff=(m.day-day+7)%7;
+    if(diff===0){const todayMin=now.getHours()*60+now.getMinutes();const mMin=m.h*60+m.m;if(mMin<=todayMin)diff=7;}
+    if(diff<minDiff){minDiff=diff;next=m;}
+  });
+  if(next){
+    const label=minDiff===0?`AUJOURD'HUI ${String(next.h).padStart(2,'0')}:${String(next.m).padStart(2,'0')}`:`${jours[next.day]} ${String(next.h).padStart(2,'0')}:${String(next.m).padStart(2,'0')}`;
+    document.getElementById('next-meeting').textContent=`▶ ${next.nom}`;
+  }
+}
+getNextMeeting();
+
+// ══════════════════════════════════════ SPEECH SYNTHESIS
+let synth=window.speechSynthesis;
+let typingInterval=null;
+
+function typeText(text,cb){
+  const el=document.getElementById('speech-text');
+  el.textContent='';
+  let i=0;
+  clearInterval(typingInterval);
+  typingInterval=setInterval(()=>{
+    if(i<text.length){el.textContent+=text[i];i++;}
+    else{clearInterval(typingInterval);if(cb)cb();}
+  },28);
+}
+
+function jarvisSpeak(text,cb){
+  speaking=true;
+  typeText(text,()=>{
+    setTimeout(()=>{speaking=false;if(cb)cb();},1000);
+  });
+  // Voix synthèse
+  if(synth){
+    synth.cancel();
+    const utt=new SpeechSynthesisUtterance(text);
+    utt.lang='fr-FR';
+    utt.rate=0.95;
+    utt.pitch=0.85;
+    // Préférer une voix masculine française
+    const voices=synth.getVoices();
+    const v=voices.find(v=>v.lang==='fr-FR'&&v.name.toLowerCase().includes('male'))
+      ||voices.find(v=>v.lang==='fr-FR')
+      ||voices.find(v=>v.lang.startsWith('fr'));
+    if(v)utt.voice=v;
+    utt.onend=()=>{speaking=false;if(cb)cb();};
+    synth.speak(utt);
+  }
+}
+
+// ══════════════════════════════════════ BRIEFING
+function buildBriefing(){
+  const now=new Date();
+  const h=now.getHours();
+  const jours=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  const jour=jours[now.getDay()];
+  let salut=h<12?'Bonjour':h<18?'Bon après-midi':'Bonsoir';
+
+  // Réunions aujourd'hui
+  const reunionsAujourdhui={
+    0:['Investissements à 9h00','Administration à 9h30','The Crew à 10h00'],
+    3:['Comité Patrimoine']
+  };
+  const rdv=reunionsAujourdhui[now.getDay()]||[];
+
+  // Projets prioritaires (ceux avec le moins de progression)
+  const priorites=['The Crew à 35%','Communication à 10%','JARVIS OS à 15%'];
+
+  // Accomplis hier (localStorage)
+  const hier=localStorage.getItem('jarvis_hier')||null;
+
+  let text=`${salut}, Loris. Nous sommes ${jour}. `;
+
+  if(rdv.length>0){
+    text+=`Vous avez ${rdv.length} réunion${rdv.length>1?'s':''} aujourd'hui : ${rdv.join(', ')}. `;
+  } else {
+    text+=`Aucune réunion programmée aujourd'hui. `;
+  }
+
+  text+=`Vos projets prioritaires ce matin sont ${priorites[0]} et ${priorites[1]}. `;
+
+  if(hier){
+    text+=`Hier, vous avez noté : ${hier}. `;
+  }
+
+  text+=`Que souhaitez-vous accomplir aujourd'hui ?`;
+  return text;
+}
+
+// ══════════════════════════════════════ MICRO / RECONNAISSANCE VOCALE
+let recognition=null;
+let micActive=false;
+
+function initSpeechRecognition(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return;
+  recognition=new SR();
+  recognition.lang='fr-FR';
+  recognition.continuous=false;
+  recognition.interimResults=false;
+  recognition.onresult=e=>{
+    const transcript=e.results[0][0].transcript.trim();
+    handleVoiceCommand(transcript);
+  };
+  recognition.onend=()=>{
+    micActive=false;
+    document.getElementById('mic-btn').classList.remove('active');
+    document.getElementById('mic-label').textContent='APPUYER POUR PARLER';
+  };
+  recognition.onerror=()=>{
+    micActive=false;
+    document.getElementById('mic-btn').classList.remove('active');
+    document.getElementById('mic-label').textContent='APPUYER POUR PARLER';
+  };
+}
+
+function toggleMic(){
+  if(!recognition){jarvisSpeak("Reconnaissance vocale non disponible sur ce navigateur. Utilisez Chrome.");return;}
+  if(micActive){recognition.stop();return;}
+  micActive=true;
+  document.getElementById('mic-btn').classList.add('active');
+  document.getElementById('mic-label').textContent='ÉCOUTE EN COURS...';
+  document.getElementById('speech-text').textContent='';
+  document.getElementById('bubble').classList.add('listening');
+  recognition.start();
+}
+
+function handleVoiceCommand(text){
+  document.getElementById('bubble').classList.remove('listening');
+  typeText('Vous : "'+text+'"',()=>{
+    setTimeout(()=>processCommand(text),600);
+  });
+}
+
+function processCommand(text){
+  const t=text.toLowerCase();
+  if(t.includes('hier')||t.includes('accompli')||t.includes('fait hier')){
+    const hier=t.replace(/.*j'ai /,'').replace(/.*nous avons /,'').trim();
+    localStorage.setItem('jarvis_hier',text);
+    jarvisSpeak('Noté. J\'ai enregistré vos accomplissements d\'hier. Je les inclurai dans votre briefing demain matin.');
+  } else if(t.includes('météo')||t.includes('temps')){
+    jarvisSpeak('Je consulte la météo de Sydney. Les données s\'affichent dans le panneau supérieur.');
+  } else if(t.includes('réunion')||t.includes('agenda')){
+    jarvisSpeak(buildBriefing());
+  } else if(t.includes('bonjour')||t.includes('bonsoir')){
+    jarvisSpeak('Bonjour Loris. Tous les systèmes sont nominaux. Comment puis-je vous aider ?');
+  } else {
+    jarvisSpeak('Compris. Fonctionnalité avancée à venir dans la prochaine version de JARVIS OS. Y a-t-il autre chose ?');
+  }
+}
+
+// ══════════════════════════════════════ SÉQUENCE D'OUVERTURE
+function startupSequence(){
+  // Attendre que les voix se chargent
+  setTimeout(()=>{
+    initSpeechRecognition();
+    const briefing=buildBriefing();
+    jarvisSpeak(briefing);
+  },1200);
+}
+
+if(synth){
+  // Les voix peuvent prendre du temps à se charger
+  if(synth.getVoices().length>0){startupSequence();}
+  else{window.speechSynthesis.onvoiceschanged=startupSequence;}
+} else {
+  setTimeout(()=>{typeText(buildBriefing());},1200);
+}
 </script>
 </body>
 </html>
