@@ -163,29 +163,23 @@ body::after{
   text-shadow:0 0 20px rgba(255,149,0,0.3);margin-bottom:3px}
 .cg-sub{font-size:.6rem;color:rgba(220,235,255,0.38);letter-spacing:1px}
 
-/* ── SPEECH ── */
-.speech-area{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);
-  z-index:20;width:min(520px,48vw);text-align:center}
-.speech-label{font-family:var(--f-hud);font-size:.38rem;color:rgba(255,149,0,0.25);
-  letter-spacing:4px;margin-bottom:5px}
-.speech-bubble{background:rgba(6,4,2,0.86);border:1px solid var(--border);
-  border-top:1px solid rgba(255,149,0,0.38);padding:12px 18px;
-  font-size:.68rem;line-height:1.85;color:var(--w1);font-family:var(--f-data);
-  backdrop-filter:blur(18px);box-shadow:0 0 40px rgba(255,80,0,0.06),inset 0 1px 0 rgba(255,149,0,0.07)}
-.speech-bubble.listening{border-color:rgba(255,149,0,0.55)}
+/* ── VOICE OVERLAY (centre, apparaît au clic sphère) ── */
+.voice-overlay{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);
+  z-index:20;width:min(460px,44vw);text-align:center;
+  opacity:0;transition:opacity .4s;pointer-events:none}
+.voice-overlay.visible{opacity:1}
+.voice-status{font-family:var(--f-hud);font-size:.38rem;color:rgba(255,149,0,0.4);
+  letter-spacing:4px;margin-bottom:6px}
+.voice-text{font-size:.68rem;line-height:1.85;color:var(--w1);font-family:var(--f-data);
+  min-height:1.4em}
 .cursor{display:inline-block;width:2px;height:.72em;background:var(--o2);
   vertical-align:middle;margin-left:1px;animation:blink .65s infinite}
-
-/* ── MIC ── */
-.mic-wrap{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
-  z-index:20;display:flex;align-items:center;gap:10px}
-.mic-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);
-  background:var(--o3);color:var(--o2);font-size:.82rem;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .2s}
-.mic-btn:hover,.mic-btn.active{border-color:var(--o1);background:rgba(255,107,0,.16);
-  box-shadow:0 0 18px rgba(255,80,0,0.38)}
-.mic-btn.active{animation:micPulse 1.2s infinite}
-.mic-label{font-family:var(--f-hud);font-size:.35rem;color:rgba(255,149,0,0.25);letter-spacing:2px}
+/* hint discret sur la sphère */
+.sphere-hint{position:fixed;left:50%;transform:translateX(-50%);
+  top:50%;margin-top:110px;z-index:15;pointer-events:none;
+  font-family:var(--f-hud);font-size:.35rem;letter-spacing:3px;
+  color:rgba(255,149,0,0.18);animation:hintPulse 3s ease-in-out infinite}
+@keyframes hintPulse{0%,100%{opacity:.18}50%{opacity:.45}}
 
 /* ── HUD CORNERS ── */
 .hc{position:fixed;width:20px;height:20px;z-index:30;pointer-events:none}
@@ -205,7 +199,6 @@ body::after{
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.15}}
 @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
-@keyframes micPulse{0%,100%{box-shadow:0 0 10px rgba(255,80,0,0.2)}50%{box-shadow:0 0 26px rgba(255,80,0,0.6)}}
 </style>
 </head>
 <body>
@@ -235,15 +228,10 @@ body::after{
   <div class="hd"><span class="hv">IA.CORE</span>&nbsp;SRC</div>
 </div>
 
-<div class="speech-area">
-  <div class="speech-label">J · A · R · V · I · S — INTERFACE VOCALE</div>
-  <div class="speech-bubble" id="bubble">
-    <span id="speech-text"></span><span class="cursor"></span>
-  </div>
-</div>
-<div class="mic-wrap">
-  <button class="mic-btn" id="mic-btn">🎙</button>
-  <div class="mic-label" id="mic-label">COMMANDE VOCALE</div>
+<div class="sphere-hint" id="sphere-hint">▸ APPUYER SUR LA SPHÈRE</div>
+<div class="voice-overlay" id="voice-overlay">
+  <div class="voice-status" id="voice-status">EN ÉCOUTE…</div>
+  <div class="voice-text" id="speech-text"></div><span class="cursor" id="voice-cursor" style="display:none"></span>
 </div>
 
 <div class="ui">
@@ -633,16 +621,93 @@ function typeText(text,cb){const el=document.getElementById('speech-text');if(!e
 function jarvisSpeak(text,cb){typeText(text,()=>{setTimeout(()=>{if(cb)cb();},700);});if(synth){synth.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=.92;u.pitch=.8;const voices=synth.getVoices();const v=voices.find(v=>v.lang==='fr-FR'&&v.name.toLowerCase().includes('male'))||voices.find(v=>v.lang==='fr-FR')||voices.find(v=>v.lang.startsWith('fr'));if(v)u.voice=v;synth.speak(u);}}
 function buildBriefing(){const now=new Date(),h=now.getHours();const J=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];const salut=h<12?'Bonjour':h<18?'Bon après-midi':'Bonsoir';const RJ={0:['Investissements à 9h','Administration à 9h30','The Crew à 10h'],3:['Comité Patrimoine']};const rdv=RJ[now.getDay()]||[];let txt=`${salut}, Loris. Nous sommes ${J[now.getDay()]}. `;if(rdv.length)txt+=`${rdv.length} réunion${rdv.length>1?'s':''} aujourd'hui : ${rdv.join(', ')}. `;else txt+='Aucune réunion programmée. ';const hier=localStorage.getItem('jarvis_hier');if(hier)txt+=`Hier : ${hier}. `;txt+='Priorités : The Crew et Communication. Que construisons-nous aujourd\'hui ?';return txt;}
 
-let recognition=null,micActive=false;
-function initSR(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;recognition=new SR();recognition.lang='fr-FR';recognition.continuous=false;recognition.interimResults=false;recognition.onresult=e=>handleVoice(e.results[0][0].transcript.trim());recognition.onend=()=>{micActive=false;const b=document.getElementById('mic-btn');if(b)b.classList.remove('active');const l=document.getElementById('mic-label');if(l)l.textContent='COMMANDE VOCALE';const bu=document.getElementById('bubble');if(bu)bu.classList.remove('listening');};recognition.onerror=()=>recognition.onend();}
-function toggleMic(){if(!recognition){jarvisSpeak('Reconnaissance vocale non disponible. Utilisez Chrome.');return;}if(micActive){recognition.stop();return;}micActive=true;const b=document.getElementById('mic-btn');if(b)b.classList.add('active');const l=document.getElementById('mic-label');if(l)l.textContent='EN ÉCOUTE…';const bu=document.getElementById('bubble');if(bu)bu.classList.add('listening');const el=document.getElementById('speech-text');if(el)el.textContent='';recognition.start();}
-function handleVoice(text){const bu=document.getElementById('bubble');if(bu)bu.classList.remove('listening');const t=text.toLowerCase();if(t.includes('hier')||t.includes('accompli')){localStorage.setItem('jarvis_hier',text);jarvisSpeak('Noté. J\'enregistre vos accomplissements pour demain.');}else if(t.includes('météo')){jarvisSpeak('Météo Sydney en consultation.');}else if(t.includes('réunion')||t.includes('agenda')){jarvisSpeak(buildBriefing());}else if(t.includes('projet')||t.includes('statut')){jarvisSpeak('Six projets actifs. Australie 60%. The Crew 35%. Communication 10%. Global 32%.');}else{jarvisSpeak('Compris, Loris. Autre chose ?');}}
+// ══════════════════════ SPHERE RAYCAST — clic sur la sphère = voix
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let micActive = false, recognition = null;
 
-document.getElementById('mic-btn')?.addEventListener('click',toggleMic);
+function showVoiceOverlay(status, text='') {
+  const ov = document.getElementById('voice-overlay');
+  const st = document.getElementById('voice-status');
+  const tx = document.getElementById('speech-text');
+  const cu = document.getElementById('voice-cursor');
+  const hi = document.getElementById('sphere-hint');
+  if(ov) ov.classList.add('visible');
+  if(st) st.textContent = status;
+  if(tx) tx.textContent = text;
+  if(cu) cu.style.display = text ? 'inline-block' : 'none';
+  if(hi) hi.style.display = 'none';
+}
+function hideVoiceOverlay() {
+  const ov = document.getElementById('voice-overlay');
+  const hi = document.getElementById('sphere-hint');
+  if(ov) { setTimeout(()=>ov.classList.remove('visible'), 3200); }
+  if(hi) { setTimeout(()=>{hi.style.display='';}, 3600); }
+}
 
-function startupSequence(){initSR();setTimeout(()=>jarvisSpeak(buildBriefing()),900);}
+function initSR(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return;
+  recognition=new SR();
+  recognition.lang='fr-FR';recognition.continuous=false;recognition.interimResults=false;
+  recognition.onresult=e=>handleVoice(e.results[0][0].transcript.trim());
+  recognition.onend=()=>{
+    micActive=false;
+    bloom.strength = 1.6; // reset bloom
+  };
+  recognition.onerror=()=>recognition.onend();
+}
+
+function toggleMic(){
+  if(!recognition){ jarvisSpeak('Reconnaissance vocale non disponible.'); return; }
+  if(micActive){ recognition.stop(); return; }
+  micActive=true;
+  bloom.strength = 2.8; // sphere glows brighter when listening
+  showVoiceOverlay('EN ÉCOUTE…');
+  const tx=document.getElementById('speech-text'); if(tx)tx.textContent='';
+  recognition.start();
+}
+
+function handleVoice(text){
+  bloom.strength = 1.6;
+  const t=text.toLowerCase();
+  let reply='';
+  if(t.includes('hier')||t.includes('accompli')){localStorage.setItem('jarvis_hier',text);reply='Noté. J\'enregistre vos accomplissements pour demain.';}
+  else if(t.includes('météo')){reply='Météo Sydney en consultation.';}
+  else if(t.includes('réunion')||t.includes('agenda')){reply=buildBriefing();}
+  else if(t.includes('projet')||t.includes('statut')){reply='Six projets actifs. Australie 60%. The Crew 35%. Communication 10%. Global 32%.';}
+  else{reply='Compris, Loris. Autre chose ?';}
+  showVoiceOverlay('JARVIS', reply);
+  jarvisSpeak(reply, hideVoiceOverlay);
+}
+
+// Canvas click → raycast against sphere
+renderer.domElement.style.cursor = 'default';
+renderer.domElement.addEventListener('click', e => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(sphere);
+  if(hits.length > 0) toggleMic();
+});
+// Cursor change on hover over sphere
+renderer.domElement.addEventListener('mousemove', e => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  renderer.domElement.style.cursor = raycaster.intersectObject(sphere).length > 0 ? 'pointer' : 'default';
+});
+
+function startupSequence(){
+  initSR();
+  setTimeout(()=>{
+    const brief=buildBriefing();
+    showVoiceOverlay('JARVIS',brief);
+    jarvisSpeak(brief,hideVoiceOverlay);
+  },900);
+}
 if(synth){synth.getVoices().length>0?startupSequence():(window.speechSynthesis.onvoiceschanged=startupSequence);}
-else{setTimeout(()=>typeText(buildBriefing()),1200);}
+else{setTimeout(()=>{showVoiceOverlay('JARVIS',buildBriefing());setTimeout(hideVoiceOverlay,5000);},1200);}
 </script>
 </body>
 </html>
